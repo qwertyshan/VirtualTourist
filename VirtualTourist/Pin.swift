@@ -13,13 +13,15 @@ class Pin : NSManagedObject {
     
     struct Keys {
         static let ID = "id"
-        static let Location = "location"
+        static let Latitude = "latitude"
+        static let Longitude = "longitude"
         static let Photos = "photos"
     }
     
     // Promote from simple properties, to Core Data attributes
-    @NSManaged var id: NSNumber
-    @NSManaged var location: CLLocationCoordinate2D
+    @NSManaged var id: Int
+    @NSManaged var latitude: Double
+    @NSManaged var longitude: Double
     @NSManaged var photos: [Photo]
     
     // Standard Core Data init method
@@ -35,6 +37,7 @@ class Pin : NSManagedObject {
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         
         id = dictionary[Keys.ID] as! Int
-        location = dictionary[Keys.Location] as! CLLocationCoordinate2D
+        latitude = dictionary[Keys.Latitude] as! Double
+        longitude = dictionary[Keys.Longitude] as! Double
     }
 }

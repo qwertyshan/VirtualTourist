@@ -11,24 +11,37 @@ import Foundation
 extension Flickr {
     
     struct Constants {
-        
-        // MARK: - URLs
-        static let ApiKey = " "
-        static let BaseUrl = " "
-        static let BaseUrlSSL = " "
-        static let BaseImageUrl = " "
-    }
-    struct Resources {
+        static let API_KEY = "57a25f910fa4ad495f7b9e8f1fcd26ea"
+        static let BASE_URL_SSL = "https://api.flickr.com/services/rest/"
+        static let METHOD_NAME = "flickr.photos.search"
+        static let EXTRAS = "url_m"
+        static let SAFE_SEARCH = "1"
+        static let DATA_FORMAT = "json"
+        static let NO_JSON_CALLBACK = "1"
+        static let BOUNDING_BOX_HALF_WIDTH = 1.0
+        static let BOUNDING_BOX_HALF_HEIGHT = 1.0
+        static let LAT_MIN = -90.0
+        static let LAT_MAX = 90.0
+        static let LON_MIN = -180.0
+        static let LON_MAX = 180.0
+        static let ACCURACY = 10
+        static let PER_PAGE = 500
     }
     
     struct Keys {
-        static let ID = "id"
-        static let ErrorStatusMessage = "status_message"
-        static let ConfigBaseImageURL = "base_url"
-        static let ConfigSecureBaseImageURL = "secure_base_url"
-        static let ConfigImages = "images"
-        static let ConfigPosterSizes = "poster_sizes"
-        static let ConfigProfileSizes = "profile_sizes"
+        static let Method = "method"
+        static let ApiKey = "api_key"
+        static let Bbox = "bbox"
+        static let SafeSearch = "safe_search"
+        static let Extras = "extras"
+        static let Format = "format"
+        static let NoJsonCallBack = "nojsoncallback"
+        static let Accuracy = "accuracy"
+        static let PerPage = "per_page"
+    }
+    
+    struct Config {
+        static let MaxPhotosToDisplay = 20
     }
     
 }

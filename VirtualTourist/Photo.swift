@@ -14,12 +14,10 @@ class Photo : NSManagedObject {
         
     struct Keys {
         static let Title = "title"
-        static let Location = "location"
         static let ImagePath = "image_path"
     }
     
     @NSManaged var title: String
-    @NSManaged var location: CLLocationCoordinate2D
     @NSManaged var imagePath: String?
     @NSManaged var pin: Pin?
     
@@ -35,7 +33,6 @@ class Photo : NSManagedObject {
         
         // Dictionary
         title = dictionary[Keys.Title] as! String
-        location = dictionary[Keys.Location] as! CLLocationCoordinate2D
         imagePath = dictionary[Keys.ImagePath] as? String
         
     }
