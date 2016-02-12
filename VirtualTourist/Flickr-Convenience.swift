@@ -73,11 +73,9 @@ extension Flickr {
                 
                 // Build array of photoDictionary
                 var photoDictionaryArray = [[String: AnyObject]]()
+                var photo: [String:String]
                 
                 for randomPhotoIndex in randomPhotoIndexArray {
-                    
-                    // Append photosArray with randomPhotoIndex to our photoDictionaryArray
-                    photoDictionaryArray.append(photosArray[randomPhotoIndex] as [String: AnyObject])
                     
                     // Get photo
                     /* GUARD: Does our photo have a key for 'url_m'? */
@@ -86,6 +84,14 @@ extension Flickr {
                         return
                     }
                     self.storeFlickrImage(imageUrlString)
+                    
+                    photo = [
+                        Photo.Keys.Title: photosArray[randomPhotoIndex]["title"] as! String,
+                        Photo.Keys.ImagePath: photosArray[randomPhotoIndex]["url_m"] as! String
+                    ]
+                    // Append photo with randomPhotoIndex to our photoDictionaryArray
+                    photoDictionaryArray.append(photo as [String: AnyObject])
+                    
                 }
                 
                 // TODO: set completion handler with data = photoDictionaryArray

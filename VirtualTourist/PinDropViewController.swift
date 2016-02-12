@@ -61,9 +61,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     @IBAction func removePinsOnTouchUp(sender: AnyObject) {
         
         // Remove existing annotations
-        for annotation : MKAnnotation in map.annotations {
-            map.removeAnnotation(annotation)
-        }
+        
     }
     
     // MARK: Helper methods
@@ -71,12 +69,13 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     func addAnnotation(gestureRecognizer:UIGestureRecognizer){
         let touchPoint = gestureRecognizer.locationInView(map)
         let newCoordinates = map.convertPoint(touchPoint, toCoordinateFromView: map)
-        let annotation = MKPointAnnotation()
+        //let annotation = MKPointAnnotation()
         
         if UIGestureRecognizerState.Began == gestureRecognizer.state {
-            _ = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, id: nil, context: sharedContext)
-            annotation.coordinate = newCoordinates
-            map.addAnnotation(annotation)
+            let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, id: nil, context: sharedContext)
+            //annotation.coordinate = newCoordinates
+            //annotation.id = pin.id
+            map.addAnnotation(pin)
             CoreDataStackManager.sharedInstance().saveContext()
         }
     }
@@ -113,6 +112,27 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         }
         
         return pinView
+    }
+    
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+        
+        switch (newState) {
+        case .Starting:
+            
+            if let startPin = view.annotation as? Pin {
+                //delete the old photos here
+                //or other code
+            }
+            
+        case .Ending, .Canceling:
+            
+            if let endPin = view.annotation as? Pin {
+                //get new photos
+                endPin.longitude = (view.annotation?.coordinate.longitude)!
+                endPin.latitude = (view.annotation?.coordinate.latitude)!
+            }
+        default: break
+        }
     }
     
     // MARK: NSFetchResultsController delegate methods
