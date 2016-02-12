@@ -14,8 +14,6 @@ class Flickr : NSObject {
     
     var session: NSURLSession
     
-    //var config = Config.unarchivedInstance() ?? Config()
-    
     override init() {
         session = NSURLSession.sharedSession()
         super.init()

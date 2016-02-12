@@ -7,12 +7,13 @@
 //
 
 import Foundation
+import UIKit
 
 extension Flickr {
     
     // MARK: - Convenience methods
     
-    func getImagesFromFlickrByBbox(latitude: Double, longitude: Double) {
+    func getImagesFromFlickrByBbox(latitude: Double, longitude: Double, completionHandler: CompletionHander) -> Void {
         
         let methodArguments = [
             Keys.Method:         Constants.METHOD_NAME,
@@ -74,43 +75,43 @@ extension Flickr {
                 var photoDictionaryArray = [[String: AnyObject]]()
                 
                 for randomPhotoIndex in randomPhotoIndexArray {
-                    photoDictionaryArray.append(photosArray[randomPhotoIndex] as [String: AnyObject])
-                }
-                
-                // TODO: Add photos from the photo dictionary to the Photo model (instead of displaying on view)
-                
-                    /* 5 - Prepare the UI updates */
-                    let photoTitle = photoDictionary["title"] as? String /* non-fatal */
                     
+                    // Append photosArray with randomPhotoIndex to our photoDictionaryArray
+                    photoDictionaryArray.append(photosArray[randomPhotoIndex] as [String: AnyObject])
+                    
+                    // Get photo
                     /* GUARD: Does our photo have a key for 'url_m'? */
-                    guard let imageUrlString = photoDictionary["url_m"] as? String else {
-                        print("Cannot find key 'url_m' in \(photoDictionary)")
+                    guard let imageUrlString = photosArray[randomPhotoIndex]["url_m"] as? String else {
+                        print("Cannot find key 'url_m' in \(photosArray[randomPhotoIndex])")
                         return
                     }
-                    
-                    let imageURL = NSURL(string: imageUrlString)
-                    
-                    /* 6 - Update the UI on the main thread */
-                    if let imageData = NSData(contentsOfURL: imageURL!) {
-                        dispatch_async(dispatch_get_main_queue(), {
-                           // self.defaultLabel.alpha = 0.0
-                         //   self.photoImageView.image = UIImage(data: imageData)
-                       //     self.photoTitleLabel.text = photoTitle ?? "(Untitled)"
-                        })
-                    } else {
-                        print("Image does not exist at \(imageURL)")
-                    }
+                    self.storeFlickrImage(imageUrlString)
+                }
                 
-            } else {
-                dispatch_async(dispatch_get_main_queue(), {
-             //       self.photoTitleLabel.text = "No Photos Found. Search Again."
-               //     self.defaultLabel.alpha = 1.0
-                 //   self.photoImageView.image = nil
-                })
+                // TODO: set completion handler with data = photoDictionaryArray
+                
+                print("photoDictionaryArray is built")
+                completionHandler(result: data, error: nil)
+            }
+                
+            else {
+                print("photoDictionaryArray could NOT be built. No photos received.")
+                let userInfo: [NSObject : AnyObject] = [NSLocalizedDescriptionKey :  NSLocalizedString("No Images", value: "No images received from Flickr.", comment: "")]
+                completionHandler(result: nil, error: NSError(domain: "getImagesFromFlickrByBbox", code: 1, userInfo: userInfo))
             }
         }
         
         task.resume()
+    }
+    
+    func storeFlickrImage(imageUrlString: String) {
+        let imageURL = NSURL(string: imageUrlString)
+        
+        if let imageData = NSData(contentsOfURL: imageURL!) {
+            Flickr.Caches.imageCache.storeImage(UIImage(data: imageData), withIdentifier: imageUrlString)
+        } else {
+            print("Image does not exist at \(imageURL)")
+        }
     }
     
     func createBoundingBoxString(latitude: Double, longitude: Double) -> String {

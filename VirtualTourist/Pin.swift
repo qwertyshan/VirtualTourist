@@ -8,8 +8,9 @@
 
 import CoreData
 import CoreLocation
+import MapKit
 
-class Pin : NSManagedObject {
+class Pin : NSManagedObject, MKAnnotation {
     
     struct Keys {
         static let ID = "id"
@@ -33,11 +34,34 @@ class Pin : NSManagedObject {
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
         
         let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
-        
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         
-        id = dictionary[Keys.ID] as! Int
+        if dictionary[Keys.ID] != nil {
+            id = dictionary[Keys.ID] as! Int
+        } else {
+            id = Int(arc4random())
+        }
         latitude = dictionary[Keys.Latitude] as! Double
         longitude = dictionary[Keys.Longitude] as! Double
     }
+    
+    // Init single pin
+    init(latitude: Double, longitude: Double, id: Int?, context: NSManagedObjectContext) {
+        
+        let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
+        super.init(entity: entity,insertIntoManagedObjectContext: context)
+        
+        if id != nil {
+            self.id = id!
+        } else {
+            self.id = Int(arc4random())
+        }
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+    
+    var coordinate: CLLocationCoordinate2D {
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+    
 }

@@ -37,6 +37,18 @@ class Photo : NSManagedObject {
         
     }
     
+    init(title: String, imagePath: String, context: NSManagedObjectContext) {
+        
+        // Core Data
+        let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
+        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        
+        // Entry
+        self.title = title
+        self.imagePath = imagePath
+        
+    }
+    
     var image: UIImage? {
         
         get {

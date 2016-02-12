@@ -9,7 +9,7 @@
         <!--PinDropViewController-->
         <scene sceneID="KoA-tg-6Qu">
             <objects>
-                <viewController title="PinDropViewController" id="Qow-ob-wYQ" sceneMemberID="viewController">
+                <viewController title="PinDropViewController" id="Qow-ob-wYQ" customClass="PinDropViewController" customModule="VirtualTourist" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="SkY-7U-MQh"/>
                         <viewControllerLayoutGuide type="bottom" id="M2B-JQ-uZr"/>
@@ -31,10 +31,16 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Virtual Tourist" id="wFC-j6-Nz8">
-                        <barButtonItem key="rightBarButtonItem" systemItem="edit" id="HIi-ZB-7d8"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="edit" id="HIi-ZB-7d8">
+                            <connections>
+                                <action selector="editMapViewOnTouchUp:" destination="Qow-ob-wYQ" id="Y5M-tx-lxc"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
                     <connections>
+                        <outlet property="editButton" destination="HIi-ZB-7d8" id="4R6-MS-noP"/>
+                        <outlet property="map" destination="A45-cY-V9E" id="6je-zh-elp"/>
                         <segue destination="ADV-Wl-SwR" kind="show" identifier="ToPhotoAlbum" id="If9-2p-iBn"/>
                     </connections>
                 </viewController>
