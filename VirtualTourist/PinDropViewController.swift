@@ -42,7 +42,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
         let fetchRequest = NSFetchRequest(entityName: "Pin")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "longitude", ascending: true)]
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
             managedObjectContext: self.sharedContext,
             sectionNameKeyPath: nil,
@@ -72,9 +72,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         //let annotation = MKPointAnnotation()
         
         if UIGestureRecognizerState.Began == gestureRecognizer.state {
-            let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, id: nil, context: sharedContext)
-            //annotation.coordinate = newCoordinates
-            //annotation.id = pin.id
+            let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
             map.addAnnotation(pin)
             CoreDataStackManager.sharedInstance().saveContext()
         }
@@ -93,6 +91,17 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         }
     }
     
+    func findPinWithLocation(location: CLLocationCoordinate2D) -> Pin {
+        
+        let pins: [Pin] = fetchAllPins()
+        
+        for pin in pins {
+            if (pin.latitude == location.latitude) && (pin.longitude == location.longitude) {
+                return pin
+            }
+        }
+        return Pin()
+    }
     
     // MARK: Map view delegate methods
     
@@ -114,22 +123,43 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         return pinView
     }
     
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        
+        let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+        /*
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        let predicate1 = NSPredicate(format: "latitude == %@", view.annotation!.coordinate.latitude)
+        let predicate2 = NSPredicate(format: "longitude == %@", view.annotation!.coordinate.longitude)
+        let predicate = NSCompoundPredicate(type: NSCompoundPredicateType.AndPredicateType, subpredicates: [predicate1, predicate2])
+        fetchRequest.predicate = predicate
+
+        if let pins = try? sharedContext.executeFetchRequest(fetchRequest) as! [Pin] {
+            print(pins.enumerate())
+            controller.pin = pins[0]
+            self.navigationController!.pushViewController(controller, animated: true)
+        }
+        */
+        controller.pin = findPinWithLocation(view.annotation!.coordinate)
+
+        self.navigationController!.pushViewController(controller, animated: true)
+    }
+    
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         
         switch (newState) {
         case .Starting:
             
             if let startPin = view.annotation as? Pin {
-                //delete the old photos here
-                //or other code
+                sharedContext.deleteObject(startPin)
+                CoreDataStackManager.sharedInstance().saveContext()
             }
             
         case .Ending, .Canceling:
             
             if let endPin = view.annotation as? Pin {
-                //get new photos
                 endPin.longitude = (view.annotation?.coordinate.longitude)!
                 endPin.latitude = (view.annotation?.coordinate.latitude)!
+                CoreDataStackManager.sharedInstance().saveContext()
             }
         default: break
         }
@@ -146,27 +176,12 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         forChangeType type: NSFetchedResultsChangeType) {
     }
     
-    //
-    // This is the most interesting method. Take particular note of way the that newIndexPath
-    // parameter gets unwrapped and put into an array literal: [newIndexPath!]
-    //
-    
     func controller(controller: NSFetchedResultsController,
         didChangeObject anObject: AnyObject,
         atIndexPath indexPath: NSIndexPath?,
         forChangeType type: NSFetchedResultsChangeType,
         newIndexPath: NSIndexPath?) {
             
-         //   switch type {
-        //    case .Insert:
-       //
-       //     case .Delete:
-       //
-       //     case .Update:
-       //
-       //     case .Move:
-
-       //     }
     }
     
     func controllerDidChangeContent(controller: NSFetchedResultsController) {

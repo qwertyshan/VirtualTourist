@@ -41,7 +41,7 @@ extension Flickr {
     }
     
     struct Config {
-        static let MaxPhotosToDisplay = 20
+        static let MaxPhotosToDisplay = 21
     }
     
 }

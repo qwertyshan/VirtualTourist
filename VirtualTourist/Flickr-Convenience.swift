@@ -93,11 +93,9 @@ extension Flickr {
                     photoDictionaryArray.append(photo as [String: AnyObject])
                     
                 }
-                
-                // TODO: set completion handler with data = photoDictionaryArray
-                
+                                
                 print("photoDictionaryArray is built")
-                completionHandler(result: data, error: nil)
+                completionHandler(result: photoDictionaryArray, error: nil)
             }
                 
             else {

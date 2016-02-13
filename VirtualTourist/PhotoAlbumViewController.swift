@@ -10,15 +10,19 @@ import Foundation
 import CoreData
 import MapKit
 
-class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, NSFetchedResultsControllerDelegate {
+class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, NSFetchedResultsControllerDelegate, MKMapViewDelegate {
     
     var selectedIndexes = [NSIndexPath]()
+    var insertedIndexPaths:[NSIndexPath]!
     var deletedIndexPaths: [NSIndexPath]!
     var updatedIndexPaths: [NSIndexPath]!
+    
+    var pin: Pin!
     
     @IBOutlet weak var map: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var bottomButton: UIBarButtonItem!
+    @IBOutlet weak var noImagesLabel: UILabel!
     
     var cancelButton: UIBarButtonItem!
     
@@ -35,6 +39,18 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         } catch {}
         
         updateBottomButton()
+        
+        //if pin.photos.isEmpty {
+            loadNewCollection()
+        //}
+        
+        map.delegate = self
+        fetchedResultsController.delegate = self
+        
+        map.addAnnotation(pin)
+        let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let region = MKCoordinateRegion(center: pin.coordinate, span: span)
+        map.setRegion(region, animated: true)
     }
     
     // Layout the collection view
@@ -75,6 +91,25 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         }
     }
     
+    // MARK: Map view delegate methods
+    
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+        
+        let reuseId = "pin"
+        
+        var pinView = map.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+        
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            pinView?.draggable = true
+            pinView!.pinTintColor = UIColor.redColor()
+        }
+        else {
+            pinView!.annotation = annotation
+        }
+        
+        return pinView
+    }
     
     // MARK: - UICollectionView
     
@@ -121,7 +156,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
-        let fetchRequest = NSFetchRequest(entityName: "Color")
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
         fetchRequest.sortDescriptors = []
         
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil, cacheName: nil)
@@ -133,38 +169,29 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     
     // MARK: - Fetched Results Controller Delegate
     
-    // Whenever changes are made to Core Data the following three methods are invoked. This first method is used to create
-    // three fresh arrays to record the index paths that will be changed.
+
     func controllerWillChangeContent(controller: NSFetchedResultsController) {
-        // We are about to handle some new changes. Start out with empty arrays for each change type
+        insertedIndexPaths = [NSIndexPath]()
         deletedIndexPaths = [NSIndexPath]()
         updatedIndexPaths = [NSIndexPath]()
         
         print("in controllerWillChangeContent")
     }
     
-    // The second method may be called multiple times, once for each Color object that is added, deleted, or changed.
-    // We store the incex paths into the three arrays.
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         
         switch type{
             
         case .Insert:
-            print("Insert an item. We don't expect to see this in this app.")
+            print("Insert an item.")
+            insertedIndexPaths.append(indexPath!)
             break
         case .Delete:
-            print("Delete an item")
-            // Here we are noting that a Color instance has been deleted from Core Data. We keep remember its index path
-            // so that we can remove the corresponding cell in "controllerDidChangeContent". The "indexPath" parameter has
-            // value that we want in this case.
+            print("Delete an item.")
             deletedIndexPaths.append(indexPath!)
             break
         case .Update:
             print("Update an item.")
-            // We don't expect Color instances to change after they are created. But Core Data would
-            // notify us of changes if any occured. This can be useful if you want to respond to changes
-            // that come about after data is downloaded. For example, when an images is downloaded from
-            // Flickr in the Virtual Tourist app
             updatedIndexPaths.append(indexPath!)
             break
         case .Move:
@@ -173,17 +200,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         }
     }
     
-    // This method is invoked after all of the changed in the current batch have been collected
-    // into the three index path arrays (insert, delete, and upate). We now need to loop through the
-    // arrays and perform the changes.
-    //
-    // The most interesting thing about the method is the collection view's "performBatchUpdates" method.
-    // Notice that all of the changes are performed inside a closure that is handed to the collection view.
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         
-        print("in controllerDidChangeContent. changes.count: \(deletedIndexPaths.count)")
+        print("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
         
         collectionView.performBatchUpdates({() -> Void in
+            
+            for indexPath in self.insertedIndexPaths {
+                self.collectionView.insertItemsAtIndexPaths([indexPath])
+            }
             
             for indexPath in self.deletedIndexPaths {
                 self.collectionView.deleteItemsAtIndexPaths([indexPath])
@@ -209,11 +234,25 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     
     func loadNewCollection() {
         
-        // TODO: Load new collection
-        
-        //for color in fetchedResultsController.fetchedObjects as! [Color] {
-         //   sharedContext.deleteObject(color)
-        //}
+        // Get images from Flickr client
+        Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
+            
+            // If error, show error label
+            guard (error == nil) else {
+                print("PhotoAlbumViewController -> There was an error with the parsed response: \(error)")
+                self.collectionView.hidden = true
+                self.noImagesLabel.hidden = false
+                return
+            }
+            
+            // Parse returned photo array and add photos to model
+            for dictionary in data as! [[String:AnyObject]] {
+                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                photo.pin = self.pin
+                print("loadNewCollection: adding \(photo)")
+                CoreDataStackManager.sharedInstance().saveContext()
+            }
+        }
     }
     
     func deleteSelectedPhotos() {

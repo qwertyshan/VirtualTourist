@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="a4M-TQ-xQV">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="a4M-TQ-xQV">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
@@ -48,10 +48,10 @@
             </objects>
             <point key="canvasLocation" x="87" y="229"/>
         </scene>
-        <!--PhotoAlbumViewController-->
+        <!--Photo Album View Controller-->
         <scene sceneID="LKa-PI-Eqi">
             <objects>
-                <viewController title="PhotoAlbumViewController" id="ADV-Wl-SwR" customClass="PhotoAlbumViewController" customModule="VirtualTourist" sceneMemberID="viewController">
+                <viewController restorationIdentifier="PhotoAlbumViewController" storyboardIdentifier="PhotoAlbumViewController" id="ADV-Wl-SwR" customClass="PhotoAlbumViewController" customModule="VirtualTourist" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="nR4-bf-KQ6"/>
                         <viewControllerLayoutGuide type="bottom" id="D2V-JR-aAF"/>
@@ -114,6 +114,13 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
+                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This pin has no images." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="b04-i5-qrr">
+                                <rect key="frame" x="117.5" y="357.5" width="179.5" height="20.5"/>
+                                <accessibility key="accessibilityConfiguration" label="This pin has no images."/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="m1t-lW-hu8">
                                 <rect key="frame" x="0.0" y="64" width="414" height="128"/>
                                 <constraints>
@@ -124,8 +131,10 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="2Ky-it-48A" firstAttribute="leading" secondItem="Gfn-vs-oiv" secondAttribute="leadingMargin" constant="-20" id="2l5-ag-fr6"/>
+                            <constraint firstItem="b04-i5-qrr" firstAttribute="centerX" secondItem="Gfn-vs-oiv" secondAttribute="centerX" id="4WT-Iq-8rQ"/>
                             <constraint firstAttribute="trailingMargin" secondItem="m1t-lW-hu8" secondAttribute="trailing" constant="-20" id="MAa-0X-L2j"/>
                             <constraint firstItem="m1t-lW-hu8" firstAttribute="leading" secondItem="Gfn-vs-oiv" secondAttribute="leadingMargin" constant="-20" id="NQN-be-nBN"/>
+                            <constraint firstItem="b04-i5-qrr" firstAttribute="centerY" secondItem="Gfn-vs-oiv" secondAttribute="centerY" id="PBh-N8-h9s"/>
                             <constraint firstAttribute="trailing" secondItem="bLi-1e-kw5" secondAttribute="trailing" id="TSR-iA-kJf"/>
                             <constraint firstItem="m1t-lW-hu8" firstAttribute="top" secondItem="nR4-bf-KQ6" secondAttribute="bottom" id="cgQ-oe-Udw"/>
                             <constraint firstItem="2Ky-it-48A" firstAttribute="top" secondItem="bLi-1e-kw5" secondAttribute="bottom" id="gWZ-GW-T6Y"/>
@@ -140,6 +149,7 @@
                         <outlet property="bottomButton" destination="15y-NL-2gU" id="REb-Dm-P8Y"/>
                         <outlet property="collectionView" destination="bLi-1e-kw5" id="Mdt-wX-o4z"/>
                         <outlet property="map" destination="m1t-lW-hu8" id="yed-GM-gRr"/>
+                        <outlet property="noImagesLabel" destination="b04-i5-qrr" id="Ana-7D-LZe"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="r5l-nk-bke" userLabel="First Responder" sceneMemberID="firstResponder"/>

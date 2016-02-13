@@ -13,14 +13,12 @@ import MapKit
 class Pin : NSManagedObject, MKAnnotation {
     
     struct Keys {
-        static let ID = "id"
         static let Latitude = "latitude"
         static let Longitude = "longitude"
         static let Photos = "photos"
     }
     
     // Promote from simple properties, to Core Data attributes
-    @NSManaged var id: Int
     @NSManaged var latitude: Double
     @NSManaged var longitude: Double
     @NSManaged var photos: [Photo]
@@ -36,26 +34,16 @@ class Pin : NSManagedObject, MKAnnotation {
         let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         
-        if dictionary[Keys.ID] != nil {
-            id = dictionary[Keys.ID] as! Int
-        } else {
-            id = Int(arc4random())
-        }
         latitude = dictionary[Keys.Latitude] as! Double
         longitude = dictionary[Keys.Longitude] as! Double
     }
     
     // Init single pin
-    init(latitude: Double, longitude: Double, id: Int?, context: NSManagedObjectContext) {
+    init(latitude: Double, longitude: Double, context: NSManagedObjectContext) {
         
         let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         
-        if id != nil {
-            self.id = id!
-        } else {
-            self.id = Int(arc4random())
-        }
         self.latitude = latitude
         self.longitude = longitude
     }
