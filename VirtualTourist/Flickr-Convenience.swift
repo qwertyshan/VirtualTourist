@@ -77,21 +77,19 @@ extension Flickr {
                 
                 for randomPhotoIndex in randomPhotoIndexArray {
                     
-                    // Get photo
-                    /* GUARD: Does our photo have a key for 'url_m'? */
-                    guard let imageUrlString = photosArray[randomPhotoIndex]["url_m"] as? String else {
-                        print("Cannot find key 'url_m' in \(photosArray[randomPhotoIndex])")
-                        return
+                    if let imagePath = photosArray[randomPhotoIndex]["url_m"] {
+                        photo = [
+                            Photo.Keys.Title: photosArray[randomPhotoIndex]["title"] as! String,
+                            Photo.Keys.ImagePath: imagePath as! String
+                        ]
+                    } else {    // If no url_m is received, add "" (nill string)
+                        photo = [
+                            Photo.Keys.Title: photosArray[randomPhotoIndex]["title"] as! String,
+                            Photo.Keys.ImagePath: ""
+                        ]
                     }
-                    self.storeFlickrImage(imageUrlString)
-                    
-                    photo = [
-                        Photo.Keys.Title: photosArray[randomPhotoIndex]["title"] as! String,
-                        Photo.Keys.ImagePath: photosArray[randomPhotoIndex]["url_m"] as! String
-                    ]
                     // Append photo with randomPhotoIndex to our photoDictionaryArray
                     photoDictionaryArray.append(photo as [String: AnyObject])
-                    
                 }
                                 
                 print("photoDictionaryArray is built")
@@ -108,14 +106,26 @@ extension Flickr {
         task.resume()
     }
     
-    func storeFlickrImage(imageUrlString: String) {
-        let imageURL = NSURL(string: imageUrlString)
+    func getFlickrImage(imagePath: String, completionHandler: (imageData: NSData?, error: NSError?) -> Void) ->  NSURLSessionTask {
         
-        if let imageData = NSData(contentsOfURL: imageURL!) {
-            Flickr.Caches.imageCache.storeImage(UIImage(data: imageData), withIdentifier: imageUrlString)
-        } else {
-            print("Image does not exist at \(imageURL)")
+        let imageURL = NSURL(string: imagePath)
+        
+        let request = NSURLRequest(URL: imageURL!)
+        
+        print("getFlickrImage --> imagePath: \(imagePath)")
+        
+        let task = session.dataTaskWithRequest(request) {data, response, downloadError in
+            
+            if let error = downloadError {
+                completionHandler(imageData: nil, error: error)
+            } else {
+                completionHandler(imageData: data, error: nil)
+            }
         }
+        
+        task.resume()
+        
+        return task
     }
     
     func createBoundingBoxString(latitude: Double, longitude: Double) -> String {

@@ -22,6 +22,7 @@
 		8F138BB61C6D5F71007ADE95 /* PinDropViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F138BB51C6D5F71007ADE95 /* PinDropViewController.swift */; };
 		8F138BB81C6D5F8B007ADE95 /* PhotoAlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F138BB71C6D5F8B007ADE95 /* PhotoAlbumViewController.swift */; };
 		8F138BBA1C6E7ADE007ADE95 /* PhotoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F138BB91C6E7ADE007ADE95 /* PhotoCell.swift */; };
+		8F15A93F1C702AB00009AA9E /* TaskCancelingCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F15A93E1C702AB00009AA9E /* TaskCancelingCollectionViewCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 		8F138BB51C6D5F71007ADE95 /* PinDropViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PinDropViewController.swift; sourceTree = "<group>"; };
 		8F138BB71C6D5F8B007ADE95 /* PhotoAlbumViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoAlbumViewController.swift; sourceTree = "<group>"; };
 		8F138BB91C6E7ADE007ADE95 /* PhotoCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoCell.swift; sourceTree = "<group>"; };
+		8F15A93E1C702AB00009AA9E /* TaskCancelingCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TaskCancelingCollectionViewCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 				8F138BB51C6D5F71007ADE95 /* PinDropViewController.swift */,
 				8F138BB71C6D5F8B007ADE95 /* PhotoAlbumViewController.swift */,
 				8F138BB91C6E7ADE007ADE95 /* PhotoCell.swift */,
+				8F15A93E1C702AB00009AA9E /* TaskCancelingCollectionViewCell.swift */,
 				8F138BB11C6C3100007ADE95 /* CoreDataStackManager.swift */,
 				8F138B911C6C0409007ADE95 /* AppDelegate.swift */,
 				8F138B981C6C0409007ADE95 /* VirtualTourist.xcdatamodeld */,
@@ -178,6 +181,7 @@
 				8F138BB41C6C4D69007ADE95 /* Flickr-Convenience.swift in Sources */,
 				8F138BB21C6C3100007ADE95 /* CoreDataStackManager.swift in Sources */,
 				8F138BB61C6D5F71007ADE95 /* PinDropViewController.swift in Sources */,
+				8F15A93F1C702AB00009AA9E /* TaskCancelingCollectionViewCell.swift in Sources */,
 				8F138BBA1C6E7ADE007ADE95 /* PhotoCell.swift in Sources */,
 				8F138B921C6C0409007ADE95 /* AppDelegate.swift in Sources */,
 				8F138B9A1C6C0409007ADE95 /* VirtualTourist.xcdatamodeld in Sources */,

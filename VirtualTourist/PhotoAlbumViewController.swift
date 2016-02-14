@@ -40,17 +40,19 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         
         updateBottomButton()
         
-        //if pin.photos.isEmpty {
-            loadNewCollection()
-        //}
-        
         map.delegate = self
         fetchedResultsController.delegate = self
         
         map.addAnnotation(pin)
-        let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
         let region = MKCoordinateRegion(center: pin.coordinate, span: span)
         map.setRegion(region, animated: true)
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        if fetchedResultsController.fetchedObjects?.count == 0 {
+            loadNewCollection()
+        }
     }
     
     // Layout the collection view
@@ -75,15 +77,52 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     
     func configureCell(cell: PhotoCell, atIndexPath indexPath: NSIndexPath) {
         
-        let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        var photoImage = UIImage()
         
-        if let image = photo.image {
-            cell.imageView.image = image
+        cell.imageView.image = nil
+        
+        let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+
+        // Set the Movie Poster Image
+        
+        if photo.imagePath == nil || photo.imagePath == "" {
+            photoImage = UIImage(named: "VirtualTourist")!
+        } else if photo.image != nil {
+            photoImage = photo.image!
+        } else { // This is the interesting case. The photo has an image name, but it is not downloaded yet.
+            
+            // Start the task that will eventually download the image
+            let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
+                
+                if let error = error {
+                    print("Image download error: \(error.localizedDescription)")
+                }
+                
+                if let data = imageData {
+                    
+                    print("Image download successful")
+                    
+                    // Create the image
+                    let image = UIImage(data: data)
+                    
+                    // update the model, so that the information gets cashed
+                    photo.image = image
+                    
+                    // update the cell later, on the main thread
+                    
+                    dispatch_async(dispatch_get_main_queue()) {
+                        cell.imageView!.image = image
+                    }
+                }
+            }
+            
+            cell.taskToCancelifCellIsReused = task
         }
         
-        // If the cell is "selected" it's color panel is grayed out
-        // we use the Swift `find` function to see if the indexPath is in the array
+        cell.imageView!.image = photoImage
         
+        
+        // If the cell is "selected" it's color panel is grayed out
         if let _ = selectedIndexes.indexOf(indexPath) {
             cell.alpha = 0.05
         } else {
@@ -91,7 +130,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         }
     }
     
-    // MARK: Map view delegate methods
+    // MARK: - Map view delegate methods
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         
@@ -114,11 +153,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     // MARK: - UICollectionView
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-        return self.fetchedResultsController.sections?.count ?? 0
+        return fetchedResultsController.sections?.count ?? 0
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section]
+        let sectionInfo = fetchedResultsController.sections![section]
         
         print("number Of Cells: \(sectionInfo.numberOfObjects)")
         return sectionInfo.numberOfObjects
@@ -128,7 +167,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
         
-        self.configureCell(cell, atIndexPath: indexPath)
+        configureCell(cell, atIndexPath: indexPath)
         
         return cell
     }
@@ -184,7 +223,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             
         case .Insert:
             print("Insert an item.")
-            insertedIndexPaths.append(indexPath!)
+            print("indexPath: \(indexPath) newIndexPath: \(newIndexPath)")
+            insertedIndexPaths.append(newIndexPath!)
             break
         case .Delete:
             print("Delete an item.")
@@ -250,7 +290,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
                 let photo = Photo(dictionary: dictionary, context: self.sharedContext)
                 photo.pin = self.pin
                 print("loadNewCollection: adding \(photo)")
-                CoreDataStackManager.sharedInstance().saveContext()
+                self.saveContext()
             }
         }
     }
@@ -266,6 +306,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             sharedContext.deleteObject(photo)
         }
         
+        saveContext()
+        
         selectedIndexes = [NSIndexPath]()
     }
     
@@ -274,6 +316,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             bottomButton.title = "Remove Selected Pictures"
         } else {
             bottomButton.title = "New Collection"
+        }
+    }
+    
+    //MARK: - Save Managed Object Context helper
+    func saveContext() {
+        dispatch_async(dispatch_get_main_queue()) {
+            _ = try? self.sharedContext.save()
         }
     }
 }
