@@ -79,8 +79,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         let width = floor(self.collectionView.frame.size.width/3)
         layout.itemSize = CGSize(width: width, height: width)
         collectionView.collectionViewLayout = layout
-        
-        
     }
     
     
@@ -89,49 +87,78 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     func configureCell(cell: PhotoCell, atIndexPath indexPath: NSIndexPath) {
         
         var photoImage = UIImage()
+        var activityIndicator = UIActivityIndicatorView()
         
+        // Set cell image to nil
         cell.imageView.image = nil
         
+        // Set activity indicator
+        activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.White)
+        activityIndicator.frame = CGRect(x: 0, y: 0, width: cell.bounds.width, height: cell.bounds.height)
+        activityIndicator.backgroundColor = (UIColor(white: 0.2, alpha: 0.7))
+        activityIndicator.hidesWhenStopped = true
+        
+        // Load photo
         let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
 
         // Set the Movie Poster Image
-        
         if photo.imagePath == nil || photo.imagePath == "" {
             photoImage = UIImage(named: "VirtualTourist")!
+            print("Image not available.")
+            
         } else if photo.image != nil {
             photoImage = photo.image!
+            print("Image retrieved from cache.")
+            
         } else { // This is the interesting case. The photo has an image name, but it is not downloaded yet.
+            
+            // Start activity indicator
+            dispatch_async(dispatch_get_main_queue()) {
+                activityIndicator.startAnimating()
+                cell.addSubview(activityIndicator)
+                print("started ActivityIndicator")
+            }
             
             // Start the task that will eventually download the image
             let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
                 
                 if let error = error {
+                    photoImage = UIImage(named: "VirtualTourist")!
                     print("Image download error: \(error.localizedDescription)")
+                    // Update the cell later, on the main thread
+                    dispatch_async(dispatch_get_main_queue()) {
+                        cell.imageView!.image = photoImage
+                        self.stopActivityIndicator(activityIndicator)
+                    }
+                    
                 }
                 
                 if let data = imageData {
                     
                     print("Image download successful")
-                    
                     // Create the image
-                    let image = UIImage(data: data)
-                    
-                    // Update the model, so that the information gets cashed
-                    photo.image = image
-                    
+                    photoImage = UIImage(data: data)!
+                    // Update the model, so that the information gets cached
+                    photo.image = photoImage
+
                     // Update the cell later, on the main thread
-                    
                     dispatch_async(dispatch_get_main_queue()) {
-                        cell.imageView!.image = image
+                        cell.imageView!.image = photoImage
+                        self.stopActivityIndicator(activityIndicator)
                     }
                 }
             }
-            
             cell.taskToCancelifCellIsReused = task
         }
         
         cell.imageView!.image = photoImage
         
+        // Stop activity indicator
+        if activityIndicator.isAnimating() {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.stopActivityIndicator(activityIndicator)
+            }
+        }
         
         // If the cell is "selected" it's color panel is grayed out
         if let _ = selectedIndexes.indexOf(indexPath) {
@@ -343,6 +370,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         } else {
             bottomButton.title = "New Collection"
         }
+    }
+    
+    func stopActivityIndicator(activityIndicator: UIActivityIndicatorView) {
+        activityIndicator.stopAnimating()
+        activityIndicator.removeFromSuperview()
+        print("stopped ActivityIndicator")
     }
     
     //MARK: - Save Managed Object Context helper
