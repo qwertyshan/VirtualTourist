@@ -12,6 +12,13 @@ import CoreData
 
 class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
     
+    enum EditState {
+        case Delete
+        case Normal
+    }
+    
+    var editState: EditState = .Normal
+    
     @IBOutlet var map: MKMapView!
     @IBOutlet weak var editButton: UIBarButtonItem!
     
@@ -55,6 +62,16 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     
     // Edit map
     @IBAction func editMapViewOnTouchUp(sender: AnyObject) {
+        switch editState {
+        case .Normal:
+            editState = .Delete
+            editButton.tintColor = UIColor.redColor()
+            print("editMapViewOnTouchUp: Switched to Delete state")
+        case .Delete:
+            editState = .Normal
+            editButton.tintColor = UIColor(red:0, green:0.569, blue:1, alpha:1)
+            print("editMapViewOnTouchUp: Switched to Normal state")
+        }
     }
     
     // Remove pins
@@ -74,7 +91,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         if UIGestureRecognizerState.Began == gestureRecognizer.state {
             let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
             map.addAnnotation(pin)
-            CoreDataStackManager.sharedInstance().saveContext()
+            saveContext()
         }
     }
     
@@ -125,67 +142,46 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         
-        let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-        /*
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        let predicate1 = NSPredicate(format: "latitude == %@", view.annotation!.coordinate.latitude)
-        let predicate2 = NSPredicate(format: "longitude == %@", view.annotation!.coordinate.longitude)
-        let predicate = NSCompoundPredicate(type: NSCompoundPredicateType.AndPredicateType, subpredicates: [predicate1, predicate2])
-        fetchRequest.predicate = predicate
-
-        if let pins = try? sharedContext.executeFetchRequest(fetchRequest) as! [Pin] {
-            print(pins.enumerate())
-            controller.pin = pins[0]
+        // Check editState
+        switch editState {
+        // if .Normal, transition to PhotoAlbumView
+        case .Normal:
+            let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+            controller.pin = findPinWithLocation(view.annotation!.coordinate)
             self.navigationController!.pushViewController(controller, animated: true)
+        // if .Delete (edit mode), delete pin
+        case .Delete:
+            print("Deleting pin with coordinates: \(view.annotation!.coordinate)")
+            sharedContext.deleteObject(findPinWithLocation(view.annotation!.coordinate))
+            map.removeAnnotation(view.annotation!)
+            saveContext()
         }
-        */
-        controller.pin = findPinWithLocation(view.annotation!.coordinate)
-
-        self.navigationController!.pushViewController(controller, animated: true)
     }
     
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         
         switch (newState) {
         case .Starting:
-            
             if let startPin = view.annotation as? Pin {
+                print("Dragging: deleting pin with coordinates: \(startPin.coordinate)")
                 sharedContext.deleteObject(startPin)
-                CoreDataStackManager.sharedInstance().saveContext()
+                saveContext()
             }
-            
         case .Ending, .Canceling:
-            
             if let endPin = view.annotation as? Pin {
                 endPin.longitude = (view.annotation?.coordinate.longitude)!
                 endPin.latitude = (view.annotation?.coordinate.latitude)!
-                CoreDataStackManager.sharedInstance().saveContext()
+                saveContext()
+                print("Dragging: saving pin with coordinates: \(endPin.coordinate)")
             }
         default: break
         }
     }
     
-    // MARK: NSFetchResultsController delegate methods
-    
-    func controllerWillChangeContent(controller: NSFetchedResultsController) {
+    // MARK: - Save Managed Object Context helper
+    func saveContext() {
+        dispatch_async(dispatch_get_main_queue()) {
+            _ = try? self.sharedContext.save()
+        }
     }
-    
-    func controller(controller: NSFetchedResultsController,
-        didChangeSection sectionInfo: NSFetchedResultsSectionInfo,
-        atIndex sectionIndex: Int,
-        forChangeType type: NSFetchedResultsChangeType) {
-    }
-    
-    func controller(controller: NSFetchedResultsController,
-        didChangeObject anObject: AnyObject,
-        atIndexPath indexPath: NSIndexPath?,
-        forChangeType type: NSFetchedResultsChangeType,
-        newIndexPath: NSIndexPath?) {
-            
-    }
-    
-    func controllerDidChangeContent(controller: NSFetchedResultsController) {
-    }
-
-    
 }

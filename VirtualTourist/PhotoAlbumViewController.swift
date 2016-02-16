@@ -79,6 +79,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         let width = floor(self.collectionView.frame.size.width/3)
         layout.itemSize = CGSize(width: width, height: width)
         collectionView.collectionViewLayout = layout
+        
+        
     }
     
     
@@ -133,7 +135,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         
         // If the cell is "selected" it's color panel is grayed out
         if let _ = selectedIndexes.indexOf(indexPath) {
-            cell.alpha = 0.05
+            cell.alpha = 0.25
         } else {
             cell.alpha = 1.0
         }
@@ -308,6 +310,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
                 self.saveContext()
             }
         }
+        
+        saveContext()
         updateBottomButton()
     }
     
@@ -322,6 +326,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             selectedIndexes = [NSIndexPath]()
         case .All:
             photosToDelete = fetchedResultsController.fetchedObjects as! [Photo]
+            print("deletePhotos: .All")
         }
         
         for photo in photosToDelete {

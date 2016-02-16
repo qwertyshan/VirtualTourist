@@ -10,37 +10,22 @@
         <scene sceneID="KoA-tg-6Qu">
             <objects>
                 <viewController title="PinDropViewController" id="Qow-ob-wYQ" customClass="PinDropViewController" customModule="VirtualTourist" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="SkY-7U-MQh"/>
-                        <viewControllerLayoutGuide type="bottom" id="M2B-JQ-uZr"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="vxP-fU-hEK">
+                    <mapView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" id="HLd-RY-9dm">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="A45-cY-V9E">
-                                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
-                            </mapView>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="M2B-JQ-uZr" firstAttribute="top" secondItem="A45-cY-V9E" secondAttribute="bottom" id="E4i-ML-77I"/>
-                            <constraint firstItem="A45-cY-V9E" firstAttribute="leading" secondItem="vxP-fU-hEK" secondAttribute="leadingMargin" constant="-20" id="E7u-qL-aPX"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="A45-cY-V9E" secondAttribute="trailing" constant="-20" id="dnw-1N-hgc"/>
-                            <constraint firstItem="A45-cY-V9E" firstAttribute="top" secondItem="vxP-fU-hEK" secondAttribute="topMargin" id="hR5-k1-eAX"/>
-                        </constraints>
-                    </view>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <color key="tintColor" red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    </mapView>
                     <navigationItem key="navigationItem" title="Virtual Tourist" id="wFC-j6-Nz8">
-                        <barButtonItem key="rightBarButtonItem" systemItem="edit" id="HIi-ZB-7d8">
+                        <barButtonItem key="rightBarButtonItem" systemItem="edit" id="gmO-1J-Wym">
                             <connections>
-                                <action selector="editMapViewOnTouchUp:" destination="Qow-ob-wYQ" id="Y5M-tx-lxc"/>
+                                <action selector="editMapViewOnTouchUp:" destination="Qow-ob-wYQ" id="qeq-1Y-rHK"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
                     <connections>
-                        <outlet property="editButton" destination="HIi-ZB-7d8" id="4R6-MS-noP"/>
-                        <outlet property="map" destination="A45-cY-V9E" id="6je-zh-elp"/>
+                        <outlet property="editButton" destination="gmO-1J-Wym" id="qcd-Rz-B1A"/>
+                        <outlet property="map" destination="HLd-RY-9dm" id="Es3-e0-9ot"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ad5-XJ-Szs" userLabel="First Responder" sceneMemberID="firstResponder"/>
