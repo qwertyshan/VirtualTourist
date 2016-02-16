@@ -40,8 +40,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         
         updateBottomButton()
         
+        // Set delegates
+        
         map.delegate = self
         fetchedResultsController.delegate = self
+        collectionView.delegate = self
+        collectionView.dataSource = self
         
         map.addAnnotation(pin)
         let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
@@ -105,10 +109,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
                     // Create the image
                     let image = UIImage(data: data)
                     
-                    // update the model, so that the information gets cashed
+                    // Update the model, so that the information gets cashed
                     photo.image = image
                     
-                    // update the cell later, on the main thread
+                    // Update the cell later, on the main thread
                     
                     dispatch_async(dispatch_get_main_queue()) {
                         cell.imageView!.image = image

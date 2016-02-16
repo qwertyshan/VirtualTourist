@@ -66,6 +66,7 @@ extension Flickr {
                 
                 // Set array length to smaller of two values: photosArray.count or MaxPhotosToDisplay
                 let arrayLength = min(photosArray.count, Config.MaxPhotosToDisplay)
+                print("arrayLength: \(arrayLength)")
                 
                 // Create an array of random photo indices
                 let randomPhotoIndexArray = (1...arrayLength).map{_ in Int(arc4random_uniform(UInt32(photosArray.count)))}
