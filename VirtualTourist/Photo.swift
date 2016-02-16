@@ -51,12 +51,17 @@ class Photo : NSManagedObject {
     
     var image: UIImage? {
         
+        // Getting and setting filename as URL's last component
         get {
-            return Flickr.Caches.imageCache.imageWithIdentifier(imagePath)
+            let url = NSURL(fileURLWithPath: imagePath!)
+            let fileName = url.lastPathComponent
+            return Flickr.Caches.imageCache.imageWithIdentifier(fileName!)
         }
         
         set {
-            Flickr.Caches.imageCache.storeImage(newValue, withIdentifier: imagePath!)
+            let url = NSURL(fileURLWithPath: imagePath!)
+            let fileName = url.lastPathComponent
+            Flickr.Caches.imageCache.storeImage(newValue, withIdentifier: fileName!)
         }
     }
 }

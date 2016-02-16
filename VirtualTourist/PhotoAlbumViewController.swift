@@ -344,6 +344,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     
     func deletePhotos(option: PhotosToDelete) {
         var photosToDelete = [Photo]()
+        let filemgr = NSFileManager.defaultManager()
         
         switch option {
         case .Selected:
@@ -357,7 +358,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         }
         
         for photo in photosToDelete {
+            // Remove image for deleted photo
+            if let imagePath = photo.imagePath {
+                let filePath = Flickr.Caches.imageCache.pathForIdentifier(NSURL(fileURLWithPath: imagePath).lastPathComponent!)
+                do {
+                    try filemgr.removeItemAtPath(filePath)
+                    print("File removed at path: \(filePath)")
+                } catch {
+                    print("Could not remove image: \(imagePath). Error: \(error)")
+                }
+            } else {
+                print(photo.imagePath)
+            }
             sharedContext.deleteObject(photo)
+            print("deletePhotos -> Deleting")
         }
         
         saveContext()
