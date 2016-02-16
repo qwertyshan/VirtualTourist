@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import GameplayKit
 
 extension Flickr {
     
@@ -62,30 +63,28 @@ extension Flickr {
                     return
                 }
                 
-                /* 4 - Get a random index, and pick a random photo's dictionary */
+                /* 4 - Shuffle the array to pick random photos */
                 
+                let shuffledPhotosArray = GKRandomSource.sharedRandom().arrayByShufflingObjectsInArray(photosArray)
+
                 // Set array length to smaller of two values: photosArray.count or MaxPhotosToDisplay
                 let arrayLength = min(photosArray.count, Config.MaxPhotosToDisplay)
                 print("arrayLength: \(arrayLength)")
-                
-                // Create an array of random photo indices
-                let randomPhotoIndexArray = (1...arrayLength).map{_ in Int(arc4random_uniform(UInt32(photosArray.count)))}
-                print("randomPhotoIndexArray: \(randomPhotoIndexArray)")
                 
                 // Build array of photoDictionary
                 var photoDictionaryArray = [[String: AnyObject]]()
                 var photo: [String:String]
                 
-                for randomPhotoIndex in randomPhotoIndexArray {
+                for randomPhotoIndex in 0...(arrayLength-1) {
                     
-                    if let imagePath = photosArray[randomPhotoIndex]["url_m"] {
+                    if let imagePath = shuffledPhotosArray[randomPhotoIndex]["url_m"] {
                         photo = [
-                            Photo.Keys.Title: photosArray[randomPhotoIndex]["title"] as! String,
+                            Photo.Keys.Title: shuffledPhotosArray[randomPhotoIndex]["title"] as! String,
                             Photo.Keys.ImagePath: imagePath as! String
                         ]
                     } else {    // If no url_m is received, add "" (nill string)
                         photo = [
-                            Photo.Keys.Title: photosArray[randomPhotoIndex]["title"] as! String,
+                            Photo.Keys.Title: shuffledPhotosArray[randomPhotoIndex]["title"] as! String,
                             Photo.Keys.ImagePath: ""
                         ]
                     }

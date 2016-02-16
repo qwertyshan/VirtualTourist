@@ -12,6 +12,11 @@ import MapKit
 
 class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, NSFetchedResultsControllerDelegate, MKMapViewDelegate {
     
+    enum PhotosToDelete {
+        case Selected
+        case All
+    }
+    
     var selectedIndexes = [NSIndexPath]()
     var insertedIndexPaths:[NSIndexPath]!
     var deletedIndexPaths: [NSIndexPath]!
@@ -272,11 +277,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         if selectedIndexes.isEmpty {
             loadNewCollection()
         } else {
-            deleteSelectedPhotos()
+            deletePhotos(.Selected)
         }
     }
     
     func loadNewCollection() {
+        
+        if fetchedResultsController.fetchedObjects?.count > 0 {
+            deletePhotos(.All)
+        }
         
         // Get images from Flickr client
         Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
@@ -284,8 +293,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             // If error, show error label
             guard (error == nil) else {
                 print("PhotoAlbumViewController -> There was an error with the parsed response: \(error)")
-                self.collectionView.hidden = true
-                self.noImagesLabel.hidden = false
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.collectionView.hidden = true
+                    self.noImagesLabel.hidden = false
+                }
                 return
             }
             
@@ -297,13 +308,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
                 self.saveContext()
             }
         }
+        updateBottomButton()
     }
     
-    func deleteSelectedPhotos() {
+    func deletePhotos(option: PhotosToDelete) {
         var photosToDelete = [Photo]()
         
-        for indexPath in selectedIndexes {
-            photosToDelete.append(fetchedResultsController.objectAtIndexPath(indexPath) as! Photo)
+        switch option {
+        case .Selected:
+            for indexPath in selectedIndexes {
+                photosToDelete.append(fetchedResultsController.objectAtIndexPath(indexPath) as! Photo)
+            }
+            selectedIndexes = [NSIndexPath]()
+        case .All:
+            photosToDelete = fetchedResultsController.fetchedObjects as! [Photo]
         }
         
         for photo in photosToDelete {
@@ -311,8 +329,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         }
         
         saveContext()
-        
-        selectedIndexes = [NSIndexPath]()
+        updateBottomButton()
     }
     
     func updateBottomButton() {
