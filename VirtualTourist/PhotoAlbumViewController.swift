@@ -140,7 +140,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
                     photoImage = UIImage(data: data)!
                     // Update the model, so that the information gets cached
                     photo.image = photoImage
-
+                    
                     // Update the cell later, on the main thread
                     dispatch_async(dispatch_get_main_queue()) {
                         cell.imageView!.image = photoImage
@@ -330,18 +330,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             for dictionary in data as! [[String:AnyObject]] {
                 let photo = Photo(dictionary: dictionary, context: self.sharedContext)
                 photo.pin = self.pin
-                print("loadNewCollection: adding \(photo)")
                 self.saveContext()
+                print("loadNewCollection: adding \(photo)")
             }
         }
-        
-        saveContext()
         updateBottomButton()
     }
     
     func deletePhotos(option: PhotosToDelete) {
         var photosToDelete = [Photo]()
-        let filemgr = NSFileManager.defaultManager()
         
         switch option {
         case .Selected:
@@ -355,23 +352,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         }
         
         for photo in photosToDelete {
-            // Remove image for deleted photo
-            if let imagePath = photo.imagePath {
-                let filePath = Flickr.Caches.imageCache.pathForIdentifier(NSURL(fileURLWithPath: imagePath).lastPathComponent!)
-                do {
-                    try filemgr.removeItemAtPath(filePath)
-                    print("File removed at path: \(filePath)")
-                } catch {
-                    print("Could not remove image: \(imagePath). Error: \(error)")
-                }
-            } else {
-                print(photo.imagePath)
-            }
             sharedContext.deleteObject(photo)
+            saveContext()
             print("deletePhotos -> Deleting")
         }
-        
-        saveContext()
+
         updateBottomButton()
     }
     
