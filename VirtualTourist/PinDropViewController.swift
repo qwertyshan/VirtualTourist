@@ -86,12 +86,12 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     func addAnnotation(gestureRecognizer:UIGestureRecognizer){
         let touchPoint = gestureRecognizer.locationInView(map)
         let newCoordinates = map.convertPoint(touchPoint, toCoordinateFromView: map)
-        //let annotation = MKPointAnnotation()
         
         if UIGestureRecognizerState.Began == gestureRecognizer.state {
             let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
             map.addAnnotation(pin)
             saveContext()
+            preloadCollection(pin)
         }
     }
     
@@ -118,6 +118,42 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
             }
         }
         return Pin()
+    }
+    
+    func preloadCollection(pin: Pin) {
+        
+        // Get images from Flickr client
+        Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
+            
+            // If error, show error label
+            guard (error == nil) else {
+                print("PhotoAlbumViewController -> There was an error with the parsed response: \(error)")
+                return
+            }
+            
+            // Parse returned photo array and add photos to model
+            for dictionary in data as! [[String:AnyObject]] {
+                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                photo.pin = pin
+                print("loadNewCollection: adding \(photo)")
+                
+                // Start the task that will eventually download the image
+                let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
+                    if let error = error {
+                        print("Image download error: \(error.localizedDescription)")
+                    }
+                    if let data = imageData {
+                        print("Image download successful")
+                        // Create the image
+                        let photoImage = UIImage(data: data)!
+                        // Update the model, so that the information gets cached
+                        photo.image = photoImage
+                    }
+                }
+                self.saveContext()
+                task.resume()
+            }
+        }
     }
     
     // MARK: Map view delegate methods

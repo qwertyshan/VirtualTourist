@@ -312,10 +312,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     
     func loadNewCollection() {
         
-        if fetchedResultsController.fetchedObjects?.count > 0 {
-            deletePhotos(.All)
-        }
-        
         // Get images from Flickr client
         Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
             
