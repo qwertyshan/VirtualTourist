@@ -116,7 +116,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             dispatch_async(dispatch_get_main_queue()) {
                 activityIndicator.startAnimating()
                 cell.addSubview(activityIndicator)
-                print("started ActivityIndicator")
+                //print("started ActivityIndicator")
             }
             
             // Start the task that will eventually download the image
@@ -371,13 +371,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     func stopActivityIndicator(activityIndicator: UIActivityIndicatorView) {
         activityIndicator.stopAnimating()
         activityIndicator.removeFromSuperview()
-        print("stopped ActivityIndicator")
+        //print("stopped ActivityIndicator")
     }
     
     //MARK: - Save Managed Object Context helper
     func saveContext() {
-        dispatch_async(dispatch_get_main_queue()) {
-            _ = try? self.sharedContext.save()
-        }
+        _ = try? self.sharedContext.save()
     }
 }

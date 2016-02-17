@@ -184,7 +184,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
             
             // If error, show error label
             guard (error == nil) else {
-                print("PhotoAlbumViewController -> There was an error with the parsed response: \(error)")
+                print("PinDropViewController -> There was an error with the parsed response: \(error)")
                 return
             }
             
@@ -193,7 +193,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
                 let photo = Photo(dictionary: dictionary, context: self.sharedContext)
                 photo.pin = pin
                 self.saveContext()
-                print("loadNewCollection: adding \(photo)")
+                print("preloadCollection: adding \(photo)")
                 
                 // Start the task that will eventually download the image
                 let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
@@ -216,8 +216,9 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     
     // MARK: - Save Managed Object Context helper
     func saveContext() {
-        dispatch_async(dispatch_get_main_queue()) {
-            _ = try? self.sharedContext.save()
-        }
+        _ = try? self.sharedContext.save()
+        //dispatch_async(dispatch_get_main_queue()) {
+          //  _ = try? self.sharedContext.save()
+        //}
     }
 }
