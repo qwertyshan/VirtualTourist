@@ -15,6 +15,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     enum EditState {
         case Delete
         case Normal
+        case Insert
     }
     
     var annotation = MKPointAnnotation()
@@ -40,6 +41,9 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         fetchedResultsController.delegate = self
         
         map.addAnnotations(fetchAllPins())
+        
+        editState = .Normal
+        setEditButton(editState)
     }
     
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
@@ -67,13 +71,12 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         switch editState {
         case .Normal:
             editState = .Delete
-            editButton.tintColor = UIColor.redColor()
-            print("editMapViewOnTouchUp: Switched to Delete state")
         case .Delete:
-            editState = .Normal
-            editButton.tintColor = UIColor(red:0, green:0.569, blue:1, alpha:1)
-            print("editMapViewOnTouchUp: Switched to Normal state")
+            self.editState = .Normal
+        case .Insert:
+            self.editState = .Insert
         }
+        setEditButton(editState)
     }
     
     // MARK: Map view delegate methods
@@ -109,9 +112,16 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         // if .Delete (edit mode), delete pin
         case .Delete:
             print("Deleting pin with coordinates: \(view.annotation!.coordinate)")
-            sharedContext.deleteObject(findPinWithLocation(view.annotation!.coordinate))
-            saveContext()
-            map.removeAnnotation(view.annotation!)
+            if let pin = findPinWithLocation(view.annotation!.coordinate) {
+                sharedContext.deleteObject(pin)
+                saveContext()
+                map.removeAnnotation(view.annotation!)
+            } else {
+                print("Could not find pin")
+            }
+        // if .Insert don't do anything
+        case .Insert:
+            print("In Insert mode. Please wait.")
         }
     }
     
@@ -119,36 +129,39 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     
     func addAnnotation(gestureRecognizer:UILongPressGestureRecognizer){
         
-        let touchPoint = gestureRecognizer.locationInView(map)
-        let newCoordinates = map.convertPoint(touchPoint, toCoordinateFromView: map)
+        if editState == EditState.Normal {
         
-        switch gestureRecognizer.state{
-        case .Began:
-            print("Began gesture")
-            let annotation = MKPointAnnotation()
-            self.annotation = annotation
-            dispatch_async(dispatch_get_main_queue(), {
-                self.annotation.coordinate = newCoordinates
-                self.map.addAnnotation(self.annotation)
-            })
+            let touchPoint = gestureRecognizer.locationInView(map)
+            let newCoordinates = map.convertPoint(touchPoint, toCoordinateFromView: map)
             
-        case .Changed:
-            print("Changed gesture")
-            dispatch_async(dispatch_get_main_queue(), {
-                self.annotation.coordinate = newCoordinates
-            })
-            
-        case .Ended:
-            print("Ended gesture")
-            dispatch_async(dispatch_get_main_queue(), {
-                self.annotation.coordinate = newCoordinates
-            })
-            let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
-            saveContext()
-            print("Pin saved with latitude: \(pin.latitude) and longitude: \(pin.longitude)")
-            preloadCollection(pin)
-            
-        default: break
+            switch gestureRecognizer.state{
+            case .Began:
+                print("Began gesture")
+                let annotation = MKPointAnnotation()
+                self.annotation = annotation
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.annotation.coordinate = newCoordinates
+                    self.map.addAnnotation(self.annotation)
+                })
+                
+            case .Changed:
+                print("Changed gesture")
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.annotation.coordinate = newCoordinates
+                })
+                
+            case .Ended:
+                print("Ended gesture")
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.annotation.coordinate = newCoordinates
+                })
+                let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
+                saveContext()
+                print("Pin saved with latitude: \(pin.latitude) and longitude: \(pin.longitude)")
+                preloadCollection(pin)
+                
+            default: break
+            }
         }
     }
     
@@ -165,7 +178,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         }
     }
     
-    func findPinWithLocation(location: CLLocationCoordinate2D) -> Pin {
+    func findPinWithLocation(location: CLLocationCoordinate2D) -> Pin? {
         
         let pins: [Pin] = fetchAllPins()
         
@@ -174,10 +187,14 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
                 return pin
             }
         }
-        return Pin()
+        return nil
     }
     
     func preloadCollection(pin: Pin) {
+        
+        // Change editSate to Insert to block deletes
+        setEditButton(.Insert)
+        editState = .Insert
         
         // Get images from Flickr client
         Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
@@ -190,35 +207,62 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
             
             // Parse returned photo array and add photos to model
             for dictionary in data as! [[String:AnyObject]] {
-                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
-                photo.pin = pin
-                self.saveContext()
-                print("preloadCollection: adding \(photo)")
-                
-                // Start the task that will eventually download the image
-                let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
-                    if let error = error {
-                        print("Image download error: \(error.localizedDescription)")
+                // Ensure pin still exists by re-fetching it
+                if let newPin = self.findPinWithLocation(CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)) {
+                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                    photo.pin = newPin
+                    self.saveContext()
+                    print("preloadCollection: adding \(photo)")
+                    
+                    // Start the task that will eventually download the image
+                    let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
+                        if let error = error {
+                            print("Image download error: \(error.localizedDescription)")
+                        }
+                        if let data = imageData {
+                            print("Image download successful")
+                            // Create the image
+                            let photoImage = UIImage(data: data)!
+                            // Update the model, so that the information gets cached
+                            photo.image = photoImage
+                            self.saveContext()
+                        }
                     }
-                    if let data = imageData {
-                        print("Image download successful")
-                        // Create the image
-                        let photoImage = UIImage(data: data)!
-                        // Update the model, so that the information gets cached
-                        photo.image = photoImage
-                        self.saveContext()
-                    }
+                    task.resume()
                 }
-                task.resume()
+                else {
+                    print("Cound not find Pin")
+                    break
+                }
             }
+        }
+        
+        // Change editState to Normal
+        setEditButton(.Normal)
+        editState = .Normal
+    }
+    
+    func setEditButton (editState: EditState) {
+        switch editState {
+        case .Normal:
+            editButton.tintColor = UIColor(red:0, green:0.569, blue:1, alpha:1)
+            editButton.title = "Edit"
+            editButton.enabled = true
+        case .Delete:
+            editButton.tintColor = UIColor.redColor()
+            editButton.title = "Delete"
+            editButton.enabled = true
+            print("Delete state")
+        case .Insert:
+            editButton.tintColor = UIColor(red:0, green:0.569, blue:1, alpha:1)
+            editButton.title = "Insert"
+            editButton.enabled = false
+            print("Insert state")
         }
     }
     
     // MARK: - Save Managed Object Context helper
     func saveContext() {
         _ = try? self.sharedContext.save()
-        //dispatch_async(dispatch_get_main_queue()) {
-          //  _ = try? self.sharedContext.save()
-        //}
     }
 }
