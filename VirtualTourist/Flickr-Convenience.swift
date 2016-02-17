@@ -76,8 +76,9 @@ extension Flickr {
                 var photo: [String:String]
                 
                 for randomPhotoIndex in 0...(arrayLength-1) {
-                    
+                    //print(shuffledPhotosArray[randomPhotoIndex])
                     if let imagePath = shuffledPhotosArray[randomPhotoIndex]["url_m"] {
+                        print("imagePath: \(imagePath as! String)")
                         photo = [
                             Photo.Keys.Title: shuffledPhotosArray[randomPhotoIndex]["title"] as! String,
                             Photo.Keys.ImagePath: imagePath as! String
@@ -89,7 +90,7 @@ extension Flickr {
                         ]
                     }
                     // Append photo with randomPhotoIndex to our photoDictionaryArray
-                    photoDictionaryArray.append(photo as [String: AnyObject])
+                    photoDictionaryArray.append(photo as [String:String])
                 }
                                 
                 print("photoDictionaryArray is built")

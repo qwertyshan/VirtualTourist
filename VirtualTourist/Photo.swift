@@ -64,4 +64,22 @@ class Photo : NSManagedObject {
             Flickr.Caches.imageCache.storeImage(newValue, withIdentifier: fileName!)
         }
     }
+    
+    override func prepareForDeletion() {
+        
+        //Delete the associated image file when the Photo managed object is deleted.
+        if let imagePath = imagePath {
+            
+            let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
+            let pathArray = [dirPath, NSURL(fileURLWithPath: imagePath).lastPathComponent!]
+            let fileURL = NSURL.fileURLWithPathComponents(pathArray)!
+            
+            do {
+                try NSFileManager.defaultManager().removeItemAtURL(fileURL)
+                print("Photo.image deleted successfully: \(pathArray)")
+            } catch {
+                print("Photo.image delete failed with error: \(error)")
+            }
+        }
+    }
 }
