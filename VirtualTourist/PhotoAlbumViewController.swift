@@ -304,6 +304,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
     @IBAction func buttonButtonClicked() {
         
         if selectedIndexes.isEmpty {
+            deletePhotos(.All)
             loadNewCollection()
         } else {
             deletePhotos(.Selected)
