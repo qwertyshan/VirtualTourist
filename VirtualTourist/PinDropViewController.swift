@@ -104,13 +104,14 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         case .Normal:
             let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
             controller.pin = findPinWithLocation(view.annotation!.coordinate)
+            map.deselectAnnotation(view.annotation, animated: false)
             self.navigationController!.pushViewController(controller, animated: true)
         // if .Delete (edit mode), delete pin
         case .Delete:
             print("Deleting pin with coordinates: \(view.annotation!.coordinate)")
             sharedContext.deleteObject(findPinWithLocation(view.annotation!.coordinate))
-            map.removeAnnotation(view.annotation!)
             saveContext()
+            map.removeAnnotation(view.annotation!)
         }
     }
     
@@ -191,6 +192,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
             for dictionary in data as! [[String:AnyObject]] {
                 let photo = Photo(dictionary: dictionary, context: self.sharedContext)
                 photo.pin = pin
+                self.saveContext()
                 print("loadNewCollection: adding \(photo)")
                 
                 // Start the task that will eventually download the image
@@ -204,9 +206,9 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
                         let photoImage = UIImage(data: data)!
                         // Update the model, so that the information gets cached
                         photo.image = photoImage
+                        self.saveContext()
                     }
                 }
-                self.saveContext()
                 task.resume()
             }
         }
