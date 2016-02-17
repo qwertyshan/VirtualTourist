@@ -19,8 +19,8 @@ This app allows users specify travel locations around the world, and create virt
 * Tap the pin to see a photo gallery of images from that location.
 * Images are fetched from Flickr using their public API.
 
-![Virtual Tourist screenshot](/doc/vt1.png)
-![Virtual Tourist screenshot](/doc/vt2.png)
+![Virtual Tourist screenshot](/doc/VT1.png)
+![Virtual Tourist screenshot](/doc/VT2.png)
 
 ## Key Files
 * **Model**
@@ -34,4 +34,4 @@ This app allows users specify travel locations around the world, and create virt
 * **Controller**
   * PinDropViewController.swift:  Map view where users can drop pins
   * PhotoAlbumViewController.swift: Album view that displays a photo album when user taps on a pin
-  * CoreDataStackManager.swift:  Core Data methods 
+  * CoreDataStackManager.swift:  Core Data methods
