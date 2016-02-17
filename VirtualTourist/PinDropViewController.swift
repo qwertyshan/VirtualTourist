@@ -17,6 +17,8 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         case Normal
     }
     
+    var annotation = MKPointAnnotation()
+    
     var editState: EditState = .Normal
     
     @IBOutlet var map: MKMapView!
@@ -74,24 +76,78 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         }
     }
     
-    // Remove pins
-    @IBAction func removePinsOnTouchUp(sender: AnyObject) {
+    // MARK: Map view delegate methods
+    
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         
-        // Remove existing annotations
+        let reuseId = "pin"
         
+        var pinView = map.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+        
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            //pinView?.draggable = true
+            pinView!.pinTintColor = UIColor.redColor()
+        }
+        else {
+            pinView!.annotation = annotation
+        }
+        
+        return pinView
+    }
+    
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        
+        // Check editState
+        switch editState {
+        // if .Normal, transition to PhotoAlbumView
+        case .Normal:
+            let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+            controller.pin = findPinWithLocation(view.annotation!.coordinate)
+            self.navigationController!.pushViewController(controller, animated: true)
+        // if .Delete (edit mode), delete pin
+        case .Delete:
+            print("Deleting pin with coordinates: \(view.annotation!.coordinate)")
+            sharedContext.deleteObject(findPinWithLocation(view.annotation!.coordinate))
+            map.removeAnnotation(view.annotation!)
+            saveContext()
+        }
     }
     
     // MARK: Helper methods
     
-    func addAnnotation(gestureRecognizer:UIGestureRecognizer){
+    func addAnnotation(gestureRecognizer:UILongPressGestureRecognizer){
+        
         let touchPoint = gestureRecognizer.locationInView(map)
         let newCoordinates = map.convertPoint(touchPoint, toCoordinateFromView: map)
         
-        if UIGestureRecognizerState.Began == gestureRecognizer.state {
+        switch gestureRecognizer.state{
+        case .Began:
+            print("Began gesture")
+            let annotation = MKPointAnnotation()
+            self.annotation = annotation
+            dispatch_async(dispatch_get_main_queue(), {
+                self.annotation.coordinate = newCoordinates
+                self.map.addAnnotation(self.annotation)
+            })
+            
+        case .Changed:
+            print("Changed gesture")
+            dispatch_async(dispatch_get_main_queue(), {
+                self.annotation.coordinate = newCoordinates
+            })
+            
+        case .Ended:
+            print("Ended gesture")
+            dispatch_async(dispatch_get_main_queue(), {
+                self.annotation.coordinate = newCoordinates
+            })
             let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
-            map.addAnnotation(pin)
             saveContext()
+            print("Pin saved with latitude: \(pin.latitude) and longitude: \(pin.longitude)")
             preloadCollection(pin)
+            
+        default: break
         }
     }
     
@@ -153,64 +209,6 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
                 self.saveContext()
                 task.resume()
             }
-        }
-    }
-    
-    // MARK: Map view delegate methods
-    
-    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
-        
-        let reuseId = "pin"
-        
-        var pinView = map.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
-        
-        if pinView == nil {
-            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView?.draggable = true
-            pinView!.pinTintColor = UIColor.redColor()
-        }
-        else {
-            pinView!.annotation = annotation
-        }
-        
-        return pinView
-    }
-    
-    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-        
-        // Check editState
-        switch editState {
-        // if .Normal, transition to PhotoAlbumView
-        case .Normal:
-            let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-            controller.pin = findPinWithLocation(view.annotation!.coordinate)
-            self.navigationController!.pushViewController(controller, animated: true)
-        // if .Delete (edit mode), delete pin
-        case .Delete:
-            print("Deleting pin with coordinates: \(view.annotation!.coordinate)")
-            sharedContext.deleteObject(findPinWithLocation(view.annotation!.coordinate))
-            map.removeAnnotation(view.annotation!)
-            saveContext()
-        }
-    }
-    
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
-        
-        switch (newState) {
-        case .Starting:
-            if let startPin = view.annotation as? Pin {
-                print("Dragging: deleting pin with coordinates: \(startPin.coordinate)")
-                sharedContext.deleteObject(startPin)
-                saveContext()
-            }
-        case .Ending, .Canceling:
-            if let endPin = view.annotation as? Pin {
-                endPin.longitude = (view.annotation?.coordinate.longitude)!
-                endPin.latitude = (view.annotation?.coordinate.latitude)!
-                saveContext()
-                print("Dragging: saving pin with coordinates: \(endPin.coordinate)")
-            }
-        default: break
         }
     }
     
