@@ -74,23 +74,29 @@ extension Flickr {
                 // Build array of photoDictionary
                 var photoDictionaryArray = [[String: AnyObject]]()
                 var photo: [String:String]
+                var insertImagePath: String
+                var insertTitle: String
                 
                 for randomPhotoIndex in 0...(arrayLength-1) {
-                    //print(shuffledPhotosArray[randomPhotoIndex])
+                    print(shuffledPhotosArray[randomPhotoIndex])
                     let imagePath: String? = shuffledPhotosArray[randomPhotoIndex]["url_m"] as! String?
-                    //print("imagePath: \(imagePath)")
-                    if (imagePath != nil) {
-                        print("imagePath: \(imagePath)")
-                        photo = [
-                            Photo.Keys.Title: shuffledPhotosArray[randomPhotoIndex]["title"] as! String,
-                            Photo.Keys.ImagePath: imagePath!
-                        ]
-                    } else {    // If no url_m is received, add "" (nill string)
-                        photo = [
-                            Photo.Keys.Title: shuffledPhotosArray[randomPhotoIndex]["title"] as! String,
-                            Photo.Keys.ImagePath: ""
-                        ]
+                    print("imagePath: \(imagePath)")
+                    if (imagePath != nil) && (imagePath != "") {
+                        insertImagePath = imagePath!
+                    } else {    // If no url_m is received, add nil string
+                        insertImagePath = ""
                     }
+                    let title: String? = shuffledPhotosArray[randomPhotoIndex]["title"] as! String?
+                    print("title: \(title)")
+                    if (imagePath != nil) && (imagePath != "") {
+                        insertTitle = title!
+                    } else {    // If no title is received, add nil string
+                        insertTitle = ""
+                    }
+                    photo = [
+                        Photo.Keys.Title: insertTitle,
+                        Photo.Keys.ImagePath: insertImagePath
+                    ]
                     // Append photo with randomPhotoIndex to our photoDictionaryArray
                     photoDictionaryArray.append(photo as [String:String])
                 }

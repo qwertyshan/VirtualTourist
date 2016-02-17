@@ -17,7 +17,7 @@ class Photo : NSManagedObject {
         static let ImagePath = "image_path"
     }
     
-    @NSManaged var title: String
+    @NSManaged var title: String?
     @NSManaged var imagePath: String?
     @NSManaged var pin: Pin?
     
@@ -32,7 +32,7 @@ class Photo : NSManagedObject {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
         
         // Dictionary
-        title = dictionary[Keys.Title] as! String
+        title = dictionary[Keys.Title] as? String
         imagePath = dictionary[Keys.ImagePath] as? String
         
     }
