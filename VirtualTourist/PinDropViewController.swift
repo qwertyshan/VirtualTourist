@@ -22,6 +22,24 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     
     var editState: EditState = .Normal
     
+    // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
+    
+    var sharedContext: NSManagedObjectContext {
+        return CoreDataStackManager.sharedInstance().managedObjectContext
+    }
+    
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "longitude", ascending: true)]
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        return fetchedResultsController
+        
+    }()
+    
     @IBOutlet var map: MKMapView!
     @IBOutlet weak var editButton: UIBarButtonItem!
     
@@ -40,29 +58,14 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         map.delegate = self
         fetchedResultsController.delegate = self
         
-        map.addAnnotations(fetchAllPins())
+        map.addAnnotations(self.fetchAllPins())
         
         editState = .Normal
         setEditButton(editState)
+        
     }
     
-    // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     
-    var sharedContext: NSManagedObjectContext {
-        return CoreDataStackManager.sharedInstance().managedObjectContext
-    }
-    
-    lazy var fetchedResultsController: NSFetchedResultsController = {
-        
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "longitude", ascending: true)]
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-            managedObjectContext: self.sharedContext,
-            sectionNameKeyPath: nil,
-            cacheName: nil)
-        return fetchedResultsController
-        
-    }()
     
     // MARK: - IBActions
     
@@ -155,10 +158,12 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
                 dispatch_async(dispatch_get_main_queue(), {
                     self.annotation.coordinate = newCoordinates
                 })
-                let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: sharedContext)
-                saveContext()
-                print("Pin saved with latitude: \(pin.latitude) and longitude: \(pin.longitude)")
-                preloadCollection(pin)
+                dispatch_async(dispatch_get_main_queue(), {
+                    let pin = Pin(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude, context: self.sharedContext)
+                    self.saveContext()
+                    print("Pin saved with latitude: \(pin.latitude) and longitude: \(pin.longitude)")
+                    self.preloadCollection(pin)
+                })
                 
             default: break
             }
@@ -191,14 +196,12 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     }
     
     func preloadCollection(pin: Pin) {
-        
         // Change editSate to Insert to block deletes
-        setEditButton(.Insert)
-        editState = .Insert
+        self.setEditButton(.Insert)
+        self.editState = .Insert
         
-        var imagePath = "imagepath"
-        let photo = Photo(title: "title", imagePath: "imagepath", context: self.sharedContext)
-        var newPin: Pin? = Pin(latitude: 0, longitude: 0, context: self.sharedContext)
+        //var photo = Photo(title: "title", imagePath: "imagepath", context: sharedContext)
+        let newPin = pin
         
         // Get images from Flickr client
         Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
@@ -211,49 +214,50 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
             
             // Parse returned photo array and add photos to model
             for dictionary in data as! [[String:AnyObject]] {
-                // Ensure pin still exists by re-fetching it
-                dispatch_async(dispatch_get_main_queue()) {
-                    newPin = self.findPinWithLocation(CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude))
-                }
-                if let newPin = newPin {
-                    dispatch_async(dispatch_get_main_queue()) {
-                        photo.imagePath = dictionary["imagePath"] as? String
-                        photo.title = dictionary["title"] as? String
-                        photo.pin = newPin
-                        imagePath = photo.imagePath!
-                        self.saveContext()
-                        print("preloadCollection: adding \(photo)")
-                    }
-                    
-                    // Start the task that will eventually download the image
-                    let task = Flickr.sharedInstance().getFlickrImage(imagePath) { imageData, error in
-                        if let error = error {
-                            print("Image download error: \(error.localizedDescription)")
-                        }
-                        if let data = imageData {
-                            print("Image download successful")
-                            // Create the image
-                            let photoImage = UIImage(data: data)!
-                            // Update the model, so that the information gets cached
-                            dispatch_async(dispatch_get_main_queue()) {
-                                photo.image = photoImage
-                                self.saveContext()
-                            }
-                        }
-                    }
-                    task.resume()
-                }
-                else {
-                    print("Cound not find Pin")
-                    return
-                }
                 
+                self.sharedContext.performBlockAndWait {
+                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                    photo.pin = newPin
+                    self.saveContext()
+                    self.downloadImage(photo)
+                }
             }
+            
         }
         
         // Change editState to Normal
-        setEditButton(.Normal)
-        editState = .Normal
+        self.setEditButton(.Normal)
+        self.editState = .Normal
+    }
+    
+    func downloadImage(photo: Photo) {
+        // Set the Photo Image
+        if photo.imagePath == nil || photo.imagePath == "" {
+            self.sharedContext.performBlockAndWait {
+                photo.image = UIImage(named: "VirtualTourist")!
+                self.saveContext()
+            }
+            print("Image not available.")
+            
+        } else {
+            // Start the task that will eventually download the image
+            let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
+                if let error = error {
+                    print("Image download error: \(error.localizedDescription)")
+                }
+                if let data = imageData {
+                    print("Image download successful")
+                    // Create the image
+                    let photoImage = UIImage(data: data)!
+                    // Update the model, so that the information gets cached
+                    self.sharedContext.performBlockAndWait {
+                        photo.image = photoImage
+                        self.saveContext()
+                    }
+                }
+            }
+            task.resume()
+        }
     }
     
     func setEditButton (editState: EditState) {
@@ -277,6 +281,10 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
     
     // MARK: - Save Managed Object Context helper
     func saveContext() {
-        _ = try? self.sharedContext.save()
+        do {
+            try sharedContext.save()
+        } catch {
+            fatalError("Failure to save context: \(error)")
+        }
     }
 }

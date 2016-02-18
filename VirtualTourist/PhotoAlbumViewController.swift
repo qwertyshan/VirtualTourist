@@ -101,7 +101,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
         // Load photo
         let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
 
-        // Set the Movie Poster Image
+        // Set the Photo Image
         if photo.imagePath == nil || photo.imagePath == "" {
             photoImage = UIImage(named: "VirtualTourist")!
             print("Image not available.")
