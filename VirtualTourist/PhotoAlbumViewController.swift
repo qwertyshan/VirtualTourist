@@ -139,7 +139,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
                     // Create the image
                     photoImage = UIImage(data: data)!
                     // Update the model, so that the information gets cached
-                    photo.image = photoImage
+                    dispatch_async(dispatch_get_main_queue()) {
+                        photo.image = photoImage
+                    }
                     
                     // Update the cell later, on the main thread
                     dispatch_async(dispatch_get_main_queue()) {
@@ -328,10 +330,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDataSource, UI
             
             // Parse returned photo array and add photos to model
             for dictionary in data as! [[String:AnyObject]] {
-                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
-                photo.pin = self.pin
-                self.saveContext()
-                print("loadNewCollection: adding \(photo)")
+                dispatch_async(dispatch_get_main_queue()) {
+                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                    photo.pin = self.pin
+                    self.saveContext()
+                    print("loadNewCollection: adding \(photo)")
+                }
             }
         }
         updateBottomButton()

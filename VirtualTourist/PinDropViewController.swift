@@ -33,7 +33,7 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         } catch {}
         
         let uitaphold = UILongPressGestureRecognizer(target: self, action: "addAnnotation:")
-        uitaphold.minimumPressDuration = 1.0
+        uitaphold.minimumPressDuration = 0.75
         
         map.addGestureRecognizer(uitaphold)
         
@@ -196,6 +196,10 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
         setEditButton(.Insert)
         editState = .Insert
         
+        var imagePath = "imagepath"
+        let photo = Photo(title: "title", imagePath: "imagepath", context: self.sharedContext)
+        var newPin: Pin? = Pin(latitude: 0, longitude: 0, context: self.sharedContext)
+        
         // Get images from Flickr client
         Flickr.sharedInstance().getImagesFromFlickrByBbox(pin.latitude, longitude: pin.longitude) { data, error in
             
@@ -208,14 +212,21 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
             // Parse returned photo array and add photos to model
             for dictionary in data as! [[String:AnyObject]] {
                 // Ensure pin still exists by re-fetching it
-                if let newPin = self.findPinWithLocation(CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)) {
-                    let photo = Photo(dictionary: dictionary, context: self.sharedContext)
-                    photo.pin = newPin
-                    self.saveContext()
-                    print("preloadCollection: adding \(photo)")
+                dispatch_async(dispatch_get_main_queue()) {
+                    newPin = self.findPinWithLocation(CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude))
+                }
+                if let newPin = newPin {
+                    dispatch_async(dispatch_get_main_queue()) {
+                        photo.imagePath = dictionary["imagePath"] as? String
+                        photo.title = dictionary["title"] as? String
+                        photo.pin = newPin
+                        imagePath = photo.imagePath!
+                        self.saveContext()
+                        print("preloadCollection: adding \(photo)")
+                    }
                     
                     // Start the task that will eventually download the image
-                    let task = Flickr.sharedInstance().getFlickrImage(photo.imagePath!) { imageData, error in
+                    let task = Flickr.sharedInstance().getFlickrImage(imagePath) { imageData, error in
                         if let error = error {
                             print("Image download error: \(error.localizedDescription)")
                         }
@@ -224,16 +235,19 @@ class PinDropViewController : UIViewController, MKMapViewDelegate, NSFetchedResu
                             // Create the image
                             let photoImage = UIImage(data: data)!
                             // Update the model, so that the information gets cached
-                            photo.image = photoImage
-                            self.saveContext()
+                            dispatch_async(dispatch_get_main_queue()) {
+                                photo.image = photoImage
+                                self.saveContext()
+                            }
                         }
                     }
                     task.resume()
                 }
                 else {
                     print("Cound not find Pin")
-                    break
+                    return
                 }
+                
             }
         }
         

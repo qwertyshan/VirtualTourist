@@ -16,7 +16,7 @@
                         <color key="tintColor" red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                     </mapView>
                     <navigationItem key="navigationItem" title="Virtual Tourist" id="wFC-j6-Nz8">
-                        <barButtonItem key="rightBarButtonItem" systemItem="edit" id="gmO-1J-Wym">
+                        <barButtonItem key="rightBarButtonItem" title="Item" id="gmO-1J-Wym">
                             <connections>
                                 <action selector="editMapViewOnTouchUp:" destination="Qow-ob-wYQ" id="qeq-1Y-rHK"/>
                             </connections>
@@ -71,13 +71,13 @@
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="m1t-lW-hu8">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="m1t-lW-hu8">
                                 <rect key="frame" x="0.0" y="64" width="414" height="128"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="128" id="iqx-f8-9TK"/>
                                 </constraints>
                             </mapView>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="bLi-1e-kw5">
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="bLi-1e-kw5">
                                 <rect key="frame" x="0.0" y="192" width="414" height="500"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="M8O-mX-i9e">
                                     <size key="itemSize" width="50" height="50"/>

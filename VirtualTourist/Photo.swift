@@ -59,7 +59,7 @@ class Photo : NSManagedObject {
         }
         
         set {
-            let url = NSURL(fileURLWithPath: imagePath!)
+            let url = NSURL(fileURLWithPath: self.imagePath!)
             let fileName = url.lastPathComponent
             Flickr.Caches.imageCache.storeImage(newValue, withIdentifier: fileName!)
         }
